@@ -64,8 +64,8 @@ async function registrarUsuario(req, res) {
 
 async function login(req, res) {
   try {
-    const { Email, Contraseña } = req.body;
 
+    const { Email, Contraseña } = req.body;
     // Verificar que los campos no estén vacíos
     if (!Email || !Contraseña) {
       return res.status(400).json({
@@ -80,7 +80,7 @@ async function login(req, res) {
     if (!usuario) {
       return res.status(401).json({
         success: false,
-        message: "Credenciales inválidas.",
+        message: "El correo que has ingresado no existe.",
       });
     }
 
@@ -100,7 +100,7 @@ async function login(req, res) {
     const token = jwt.sign(
       { usuarioId: usuario.IDUsuario },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "12h" }
     );
 
     const userData = {
@@ -111,11 +111,11 @@ async function login(req, res) {
         id: usuario.IDUsuario,
         nombre: usuario.Nombre,
         apellido: usuario.Apellido,
+        rol: usuario.Rol
       },
     };
 
     res.json(userData);
-    // res.json({ success: true, message: 'Inicio de sesión exitoso.', token});
   } catch (error) {
     console.log("Error al iniciar sesión: ", error);
     res.status(500).json({ success: false, message: "Error en el servidor." });
@@ -138,7 +138,8 @@ async function reqResetPassword(req, res) {
       expiresIn: "10m",
     });
 
-    const resetUrl = `https://localhost:3500/api/reset-password/${token}`;
+    const resetForm = 'http://localhost:8000/newpassword.html'
+    //const resetUrl = `https://localhost:3500/api/reset-password/${token}`;
 
     const transporter = nodemailer.createTransport({
       service: "gmail",
@@ -155,7 +156,7 @@ async function reqResetPassword(req, res) {
       html: `
       <h1>Hola ${usuario.Nombre} ${usuario.Apellido}</h1>
       <p>Para restablecer su contraseña haga click en "Restablecer contraseña": </p>
-      <a href="${resetUrl}">Restablecer contraseña</a>
+      <a href="${resetForm}">Restablecer contraseña</a>
       <p>Este enlace expirara en 10 minutos.</p>
       <p>¡Gracias!</p>
       `,
@@ -167,6 +168,7 @@ async function reqResetPassword(req, res) {
       success: true,
       message:
         "Se ha enviado un enlace de restablecimiento a tu correo electronico.",
+      token: token,
     });
   } catch (error) {
     console.log("Error al solicitar restablecimiento de contraseña: ", error);
