@@ -11,7 +11,11 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3500;
 
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true,
+}));
 app.use(bodyParser.json());
 
 app.use("/api", HistorialMedicoRoute);
