@@ -13,6 +13,7 @@ async function tokenVerify(req, res, next) {
   try {
     const decoded = await jwt.verify(token, process.env.JWT_SECRET);
     req.usuario = decoded;
+    console.log(req.usuario)
     next();
   } catch (error) {
     console.error("Error al verificar token:", error);

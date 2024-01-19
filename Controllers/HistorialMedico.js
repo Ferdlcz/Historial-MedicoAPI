@@ -1,8 +1,22 @@
 const database = require("../Config/Database");
 
+function obtenerIDUsuarioSesion(req) {
+  const usuarioSesion = req.usuario;
+
+  if (usuarioSesion && usuarioSesion.usuarioId) {
+    return usuarioSesion.usuarioId;
+  } else {
+    return null;
+  }
+}
+
+
+// Función para crear el historial en la base de datos
 async function CrearHistorial(req, res) {
+  let connection;
+
   try {
-    // Extraer datos del cuerpo de la solicitud
+    // Extraer datos del cuerpo de la solicitud y del usuario autenticado
     const {
       nombre,
       apellidoPaterno,
@@ -43,16 +57,25 @@ async function CrearHistorial(req, res) {
       temperatura,
     } = req.body;
 
+    const IDUsuario = obtenerIDUsuarioSesion(req);
+
+    console.log(IDUsuario)
+
+    if (!IDUsuario) {
+      return res.status(401).json({ success: false, message: "Usuario no autenticado" });
+    }
+
     // Obtener una conexión a la base de datos
-    const connection = await database.getConnection();
+    connection = await database.getConnection();
 
     // Iniciar una transacción en la base de datos
     await connection.beginTransaction();
 
     try {
       await connection.query(
-        "CALL CrearHistorial(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "CALL CrearHistorial(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [
+          IDUsuario,
           nombre,
           apellidoPaterno,
           apellidoMaterno,
@@ -92,6 +115,7 @@ async function CrearHistorial(req, res) {
           temperatura,
         ]
       );
+
       // Confirmar la transacción si todo fue exitoso
       await connection.commit();
 
@@ -105,23 +129,24 @@ async function CrearHistorial(req, res) {
       await connection.rollback();
       console.error("Error al ejecutar el procedimiento almacenado:", error);
 
+      // Liberar la conexión a la base de datos
       connection.release();
 
       res.status(500).json({ success: false, message: "Error en el servidor" });
     }
   } catch (error) {
-    await connection.rollback();
     console.error("Error al ejecutar el procedimiento almacenado:", error);
 
-    connection.release();
+    // Liberar la conexión a la base de datos si ocurrió un error antes de la transacción
+    if (connection) {
+      connection.release();
+    }
 
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error en el servidor",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error en el servidor",
+      error: error.message,
+    });
   }
 }
 
