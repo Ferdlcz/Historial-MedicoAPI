@@ -139,7 +139,6 @@ async function reqResetPassword(req, res) {
     });
 
     const resetForm = 'http://localhost:8000/newpassword.html'
-    //const resetUrl = `https://localhost:3500/api/reset-password/${token}`;
 
     const transporter = nodemailer.createTransport({
       service: "gmail",

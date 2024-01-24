@@ -175,7 +175,55 @@ async function ObtenerHistorial(req, res) {
   }
 }
 
+async function ObtenerHistorialID(req, res){
+  try{
+    const IDUsuario = obtenerIDUsuarioSesion(req);
+
+    if(!IDUsuario){
+      return res.status(401).json({
+        success: false,
+        message: "Usuario no autenticado"
+      })
+    }
+
+    const connection = await database.getConnection();
+    await connection.beginTransaction();
+
+    try{
+      const [results] = await connection.query("CALL ConsultarHistorialID(?)", [IDUsuario]);
+      const infoUsuarios = results[0];
+
+      if(!infoUsuarios || infoUsuarios.length === 0){
+        return res.status(404).json({
+          success: false,
+          message: "No se ha encontrado un historial medico para este usuario"
+        })
+      }
+
+      res.json({infoUsuarios});
+
+      await connection.commit();
+    }catch(error){
+      await connection.rollback();
+      console.log("Error al ejecutar el procedimiento almacenado: ", error);
+      res.status(500).json({
+        success: false,
+        message: "Error en el servidor"
+      })
+    }finally{
+      connection.release();
+    }
+  }catch(error){
+    console.log("Error al procesar la solicitud: ", error);
+    res.status(500).json({
+      success: false, 
+      message: "Error en el servidor"
+    })
+  }
+}
+
 module.exports = {
   CrearHistorial,
   ObtenerHistorial,
+  ObtenerHistorialID
 };
