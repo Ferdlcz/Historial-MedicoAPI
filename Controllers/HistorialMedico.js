@@ -222,8 +222,146 @@ async function ObtenerHistorialID(req, res){
   }
 }
 
+async function ActualizarHistorial(req, res){
+  let connection;
+
+  try{
+    const {
+      nombre,
+      apellidoPaterno,
+      apellidoMaterno,
+      fechaNacimiento,
+      edad,
+      telefono,
+      email,
+      direccion,
+      numero,
+      colonia,
+      municipio,
+      estado,
+      antecedenteEnfermedades,
+      antecedenteHereditarios,
+      consumoAlcohol,
+      consumoTabaco,
+      alergias,
+      historialMenstrual,
+      menarca,
+      ivsa,
+      anticopceptivo,
+      examenes,
+      fur,
+      numeroEmbarazos,
+      numeroPartos,
+      numeroCesareas,
+      numeroLegrado,
+      complicacionesParto,
+      complicacionesEmbarazo,
+      diabetesGestacional,
+      pesobebe,
+      antecedentesFamEmbarazo,
+      peso,
+      talla,
+      ta,
+      spo2,
+      temperatura,
+    } = req.body;
+
+    const IDUsuario = obtenerIDUsuarioSesion(req);
+    console.log(IDUsuario)
+  
+    if(!IDUsuario){
+      return res.status(401).json({
+        success: false,
+        message: "Usuario no autenticado"
+      })
+    }
+
+    connection = await database.getConnection();
+
+    await connection.beginTransaction();
+
+    try{
+      await connection.query(
+        "CALL ActualizarHistorial(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [
+            IDUsuario,
+            nombre,
+            apellidoPaterno,
+            apellidoMaterno,
+            fechaNacimiento,
+            edad,
+            telefono,
+            email,
+            direccion,
+            numero,
+            estado,
+            municipio,
+            colonia,
+            antecedenteEnfermedades,
+            antecedenteHereditarios,
+            consumoAlcohol,
+            consumoTabaco,
+            alergias,
+            historialMenstrual,
+            menarca,
+            ivsa,
+            anticopceptivo,
+            examenes,
+            fur,
+            numeroEmbarazos,
+            numeroPartos,
+            numeroCesareas,
+            numeroLegrado,
+            complicacionesParto,
+            complicacionesEmbarazo,
+            diabetesGestacional,
+            pesobebe,
+            antecedentesFamEmbarazo,
+            peso,
+            talla,
+            ta,
+            spo2,
+            temperatura,
+        ]
+      );
+
+        await connection.commit();
+        connection.release();
+
+        res.json({
+          success: true,
+          message: "Actualizacion exitosa"
+        });
+        console.log("Actualizado correctamente");
+    }catch (error){
+      await connection.rollback();
+      console.log("Error al ejecutar procedimiento almacenado: ", error);
+
+      connection.release();
+
+      res.status(500).json({
+        success: false,
+        message: "Error en el servidor"
+      });
+    }
+  }catch(error){
+    console.log("Error al ejecutar el procedimiento almacenado: ", error)
+    if(connection){
+      connection.release();
+    }
+  
+    res.status(500).json({
+      success: false,
+      message: "Error en el servidor",
+      error: error.message,
+    })
+  
+  }
+}
+
 module.exports = {
   CrearHistorial,
   ObtenerHistorial,
-  ObtenerHistorialID
+  ObtenerHistorialID,
+  ActualizarHistorial
 };

@@ -5,6 +5,7 @@ const tokenVerify = require("../Middlewares/TokenVerify");
 const router = express.Router();
 
 router.post("/registrar", tokenVerify, historialMedico.CrearHistorial);
+router.put('/actualizarHistorial', tokenVerify, historialMedico.ActualizarHistorial);
 router.get("/historial", tokenVerify, historialMedico.ObtenerHistorial);
 router.get("/historial/:IDUsuario", tokenVerify, historialMedico.ObtenerHistorialID);
 
