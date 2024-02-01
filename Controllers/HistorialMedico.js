@@ -16,7 +16,7 @@ async function CrearHistorial(req, res) {
   let connection;
 
   try {
-    // Extraer datos del cuerpo de la solicitud y del usuario autenticado
+
     const {
       nombre,
       apellidoPaterno,
@@ -59,19 +59,28 @@ async function CrearHistorial(req, res) {
 
     const IDUsuario = obtenerIDUsuarioSesion(req);
 
-    console.log(IDUsuario)
+    console.log(IDUsuario);
 
     if (!IDUsuario) {
       return res.status(401).json({ success: false, message: "Usuario no autenticado" });
     }
 
-    // Obtener una conexión a la base de datos
     connection = await database.getConnection();
 
-    // Iniciar una transacción en la base de datos
     await connection.beginTransaction();
 
     try {
+
+
+const [historialExistente] = await connection.query("CALL ConsultarHistorialID(?)", [IDUsuario]);
+
+if (historialExistente && historialExistente.length > 0 && historialExistente[0].length > 0) {
+  await connection.rollback();
+  connection.release();
+  return res.status(400).json({ success: false, message: 'Ya existe un historial médico para este usuario.' });
+}
+
+
       await connection.query(
         "CALL CrearHistorial(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [
@@ -116,20 +125,17 @@ async function CrearHistorial(req, res) {
         ]
       );
 
-      // Confirmar la transacción si todo fue exitoso
       await connection.commit();
 
-      // Liberar la conexión a la base de datos
       connection.release();
 
-      // Enviar una respuesta JSON indicando éxito
       res.json({ success: true, message: "Registro exitoso" });
       console.log("Registrado correctamente");
     } catch (error) {
+
       await connection.rollback();
       console.error("Error al ejecutar el procedimiento almacenado:", error);
 
-      // Liberar la conexión a la base de datos
       connection.release();
 
       res.status(500).json({ success: false, message: "Error en el servidor" });
@@ -137,7 +143,6 @@ async function CrearHistorial(req, res) {
   } catch (error) {
     console.error("Error al ejecutar el procedimiento almacenado:", error);
 
-    // Liberar la conexión a la base de datos si ocurrió un error antes de la transacción
     if (connection) {
       connection.release();
     }
@@ -171,7 +176,7 @@ async function ObtenerHistorial(req, res) {
     }
   } catch (error) {
     console.error("Error al procesar la solicitud:", error);
-    res.status(500).json({ success: false, message: "Error en el servidor" });
+    res.status(500).json({ success: false,});
   }
 }
 
