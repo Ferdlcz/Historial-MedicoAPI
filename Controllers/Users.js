@@ -218,9 +218,63 @@ async function resetPassword(req, res) {
   }
 }
 
+async function getUserById(req, res){
+  try{
+    const {userId} = req.params;
+
+    const user = await UsuarioModel.getUserId(userId);
+
+    if(user){
+      res.json({
+        success: true,
+        user
+      })
+    }else{
+      res.status(404).json({
+        success: false,
+        message: "Usuario no encontrado."
+      })
+    }
+  }catch(error){
+    console.log("Error al obtener usuario", error);
+    res.status(500).json({
+      success: false,
+      message: "Error en el servidor.",
+      error: error.message
+    })
+  }
+}
+
+async function getAllUsers(req, res){
+  try{
+    const users = await UsuarioModel.getAllUsers();
+
+    if(users){
+      res.json({
+        success: true,
+        users
+      })
+    }else{
+      res.status(404).json({
+        success: false,
+        message: "No hay usuarios registrados"
+      })
+    }
+  }catch(error){
+    console.log("Error al obtener todos los usuarios", error)
+    res.status(500).json({
+      success: false,
+      message: "Error en el servidor.",
+      error: error.message
+    })
+  }
+}
+
 module.exports = {
   registrarUsuario,
   login,
   reqResetPassword,
-  resetPassword
+  resetPassword,
+  getUserById,
+  getAllUsers
 };

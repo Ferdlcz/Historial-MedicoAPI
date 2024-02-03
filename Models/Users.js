@@ -40,6 +40,33 @@ async function getUserById(userId) {
   }
 }
 
+async function getAllUsers(){
+  const connection = await database.getConnection();
+  try {
+    const [results] = await connection.query('SELECT * FROM Usuarios WHERE Rol = "Paciente"');
+    return results;
+  } finally {
+    connection.release();
+  }
+}
+
+async function getUserId(userId){
+  const connection = await database.getConnection();
+  try{
+    const [results] = await connection.query(
+      "Select IDUsuario, Nombre, Apellido FROM usuarios WHERE IDUsuario = ?", [userId]
+    );
+
+    if(results.length > 0){
+      return results[0];
+    }else{
+      return null;
+    }
+  } finally{
+    connection.release();
+  }
+}
+
 async function getUserEmail(Email) {
   const connection = await database.getConnection();
   try {
@@ -76,4 +103,6 @@ module.exports = {
   getUserEmail,
   updatePassword,
   getUserById,
+  getUserId,
+  getAllUsers,
 };
