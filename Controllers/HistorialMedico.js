@@ -1,4 +1,5 @@
 const database = require("../Config/Database");
+const usuarioModel = require("../Models/Users")
 
 function obtenerIDUsuarioSesion(req) {
   const usuarioSesion = req.usuario;
@@ -9,7 +10,6 @@ function obtenerIDUsuarioSesion(req) {
     return null;
   }
 }
-
 
 // Función para crear el historial en la base de datos
 async function CrearHistorial(req, res) {
@@ -274,10 +274,28 @@ async function ObtenerHistorialByID(req, res){
   }
 }
 
-async function ActualizarHistorial(req, res){
+async function ActualizarHistorial(req, res) {
   let connection;
 
-  try{
+  try {
+
+    const IDUsuario = req.params.IDUsuario;
+
+    if(!IDUsuario){
+      return res.status(401).json({
+        success: false,
+        message: "Usuario no proporcionado"
+      })
+    }
+
+    const user = await usuarioModel.getUserById(IDUsuario);
+    if(!user){
+      return res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado'
+      })
+    }
+
     const {
       nombre,
       apellidoPaterno,
@@ -318,96 +336,80 @@ async function ActualizarHistorial(req, res){
       temperatura,
     } = req.body;
 
-    const IDUsuario = obtenerIDUsuarioSesion(req);
-    console.log(IDUsuario)
-  
-    if(!IDUsuario){
-      return res.status(401).json({
-        success: false,
-        message: "Usuario no autenticado"
-      })
-    }
-
     connection = await database.getConnection();
-
     await connection.beginTransaction();
 
-    try{
+    try {
       await connection.query(
         "CALL ActualizarHistorial(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [
-            IDUsuario,
-            nombre,
-            apellidoPaterno,
-            apellidoMaterno,
-            fechaNacimiento,
-            edad,
-            telefono,
-            email,
-            direccion,
-            numero,
-            estado,
-            municipio,
-            colonia,
-            antecedenteEnfermedades,
-            antecedenteHereditarios,
-            consumoAlcohol,
-            consumoTabaco,
-            alergias,
-            historialMenstrual,
-            menarca,
-            ivsa,
-            anticopceptivo,
-            examenes,
-            fur,
-            numeroEmbarazos,
-            numeroPartos,
-            numeroCesareas,
-            numeroLegrado,
-            complicacionesParto,
-            complicacionesEmbarazo,
-            diabetesGestacional,
-            pesobebe,
-            antecedentesFamEmbarazo,
-            peso,
-            talla,
-            ta,
-            spo2,
-            temperatura,
+          IDUsuario,
+          nombre,
+          apellidoPaterno,
+          apellidoMaterno,
+          fechaNacimiento,
+          edad,
+          telefono,
+          email,
+          direccion,
+          numero,
+          estado,
+          municipio,
+          colonia,
+          antecedenteEnfermedades,
+          antecedenteHereditarios,
+          consumoAlcohol,
+          consumoTabaco,
+          alergias,
+          historialMenstrual,
+          menarca,
+          ivsa,
+          anticopceptivo,
+          examenes,
+          fur,
+          numeroEmbarazos,
+          numeroPartos,
+          numeroCesareas,
+          numeroLegrado,
+          complicacionesParto,
+          complicacionesEmbarazo,
+          diabetesGestacional,
+          pesobebe,
+          antecedentesFamEmbarazo,
+          peso,
+          talla,
+          ta,
+          spo2,
+          temperatura,
         ]
       );
 
-        await connection.commit();
-        connection.release();
-
-        res.json({
-          success: true,
-          message: "Actualizacion exitosa"
-        });
-        console.log("Actualizado correctamente");
-    }catch (error){
-      await connection.rollback();
-      console.log("Error al ejecutar procedimiento almacenado: ", error);
-
+      await connection.commit();
       connection.release();
 
+      res.json({
+        success: true,
+        message: "Actualización exitosa del historial médico",
+        data: user
+      });
+    } catch (error) {
+      await connection.rollback();
+      console.error("Error al ejecutar el procedimiento almacenado:", error);
       res.status(500).json({
         success: false,
         message: "Error en el servidor"
       });
     }
-  }catch(error){
-    console.log("Error al ejecutar el procedimiento almacenado: ", error)
-    if(connection){
+  } catch (error) {
+    console.error("Error al procesar la solicitud:", error);
+    if (connection) {
       connection.release();
     }
-  
     res.status(500).json({
       success: false,
       message: "Error en el servidor",
       error: error.message,
-    })
-  
+    });
   }
 }
 
