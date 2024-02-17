@@ -413,10 +413,51 @@ async function ActualizarHistorial(req, res) {
   }
 }
 
+async function addObservation(req, res){
+  let connection;
+
+  try{
+    const { IDUsuario, Observacion } = req.body;
+
+    connection = await database.getConnection();
+    await connection.beginTransaction();
+
+    try{
+      await connection.query("INSERT INTO Observaciones (IDUsuario, Observacion) VALUES (?, ?)", [
+        IDUsuario,
+        Observacion
+      ])
+
+      await connection.commit();
+      connection.release();
+
+      res.json({
+        success: true,
+        message: "Registro exitoso",
+        data: { IDUsuario, Observacion }
+      });
+    }finally{
+      connection.release();
+    }
+
+  }catch(error){
+    console.error("Error al procesar la solicitud:", error);
+    if (connection) {
+      connection.release();
+    }
+    res.status(500).json({
+      success: false,
+      message: "Error en el servidor",
+      error: error.message,
+    });
+  }
+}
+
 module.exports = {
   CrearHistorial,
   ObtenerHistorial,
   ObtenerHistorialID,
   ObtenerHistorialByID,
-  ActualizarHistorial
+  ActualizarHistorial,
+  addObservation,
 };

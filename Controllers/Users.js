@@ -270,11 +270,13 @@ async function getAllUsers(req, res){
   }
 }
 
+
+
 module.exports = {
   registrarUsuario,
   login,
   reqResetPassword,
   resetPassword,
   getUserById,
-  getAllUsers
+  getAllUsers,
 };
