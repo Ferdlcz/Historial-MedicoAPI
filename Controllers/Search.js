@@ -7,7 +7,7 @@ async function searchUser(req, res) {
         const connection = await database.getConnection();
         
         const [results] = await connection.query(
-            "SELECT Nombre, ApellidoPaterno FROM informacionpersonal WHERE Nombre LIKE ? OR ApellidoPaterno LIKE ? OR CONCAT(Nombre, ' ', ApellidoPaterno) LIKE ?",
+            "SELECT IDUsuario, Nombre, ApellidoPaterno FROM informacionpersonal WHERE Nombre LIKE ? OR ApellidoPaterno LIKE ? OR CONCAT(Nombre, ' ', ApellidoPaterno) LIKE ?",
             [`%${term}%`, `%${term}%`, `%${term}%`]
         );
     
