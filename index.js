@@ -5,6 +5,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const HistorialMedicoRoute = require("./Routes/HistorialMedico");
 const UsersRoute = require("./Routes/UsersRoute");
+const searchRoute = require("./Routes/Search")
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ app.use(bodyParser.json());
 
 app.use("/api", HistorialMedicoRoute);
 app.use("/api", UsersRoute);
+app.use("/api", searchRoute);
 
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en el puerto ${PORT}`);

@@ -1,5 +1,5 @@
 const database = require("../Config/Database");
-const usuarioModel = require("../Models/Users")
+const usuarioModel = require("../Models/Users");
 
 function obtenerIDUsuarioSesion(req) {
   const usuarioSesion = req.usuario;
@@ -413,42 +413,55 @@ async function ActualizarHistorial(req, res) {
   }
 }
 
-async function addObservation(req, res){
+async function Observations(req, res){
   let connection;
 
-  try{
+  try {
     const { IDUsuario, Observacion } = req.body;
 
     connection = await database.getConnection();
+
     await connection.beginTransaction();
 
     try{
-      await connection.query("INSERT INTO Observaciones (IDUsuario, Observacion) VALUES (?, ?)", [
-        IDUsuario,
-        Observacion
-      ])
+      //Verificar si existe una observacion para el usuario
+      const [existingObservation] = await connection.query("SELECT Observacion FROM observaciones WHERE IDUsuario = ?", [IDUsuario]);
+
+      if(existingObservation.length > 0){
+        await connection.query("UPDATE observaciones SET Observacion = ? WHERE IDUsuario = ?", [
+          Observacion,
+          IDUsuario
+        ]);
+      }else{
+        await connection.query("INSERT INTO observaciones (IDUsuario, Observacion) VALUES (?, ?)", [
+          IDUsuario,
+          Observacion
+        ])
+      }
 
       await connection.commit();
       connection.release();
 
       res.json({
         success: true,
-        message: "Registro exitoso",
-        data: { IDUsuario, Observacion }
+        message: existingObservation.length > 0 ? "Actualizacion exitosa" : "Registro exitoso",
+        data: {IDUsuario, Observacion}
       });
-    }finally{
+    } finally{
+    
       connection.release();
+    
     }
-
   }catch(error){
-    console.error("Error al procesar la solicitud:", error);
-    if (connection) {
-      connection.release();
+    console.log("Error al procesar la solicitud:", error);
+
+    if(connection){
+      connection.release()
     }
     res.status(500).json({
       success: false,
       message: "Error en el servidor",
-      error: error.message,
+      error: error.message
     });
   }
 }
@@ -459,5 +472,5 @@ module.exports = {
   ObtenerHistorialID,
   ObtenerHistorialByID,
   ActualizarHistorial,
-  addObservation,
+  Observations,
 };
